@@ -1,1 +1,1 @@
-from .arxivscraper import *
+from .scraper import *
