@@ -22,14 +22,15 @@ except ImportError:
  -> http://pypi.python.org/pypi/setuptools""")
 
 setup(
-    name = "arxivscraper",
-    version = "0.0.2",
-    description = "Get arXiv.org metadate within a date range and category",
-    author = "Mahdi Sadjadi",
-    author_email = "sadjadi.seyedmahdi@gmail.com",
-    url = "https://github.com/Mahdisadjadi/arxivscraper",
-    download_url = 'https://github.com/Mahdisadjadi/arxivscraper/archive/0.0.2.tar.gz',
-    py_modules = [""],
+    name = "paperscraper",
+    version = "0.0.1",
+    description = "Get paper text data of specific language users",
+    author = "Mahdi Sadjadi, Peiyu Liao",
+    author_email = "pyliao@stanford.edu",
+    url = "https://github.com/pyliaorachel/paperscraper",
+    install_requires = [
+        "tex2py"
+    ],
     keywords = ["arxiv", "scraper", "api", "citation"],
     license = "MIT",
     classifiers = [
