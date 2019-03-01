@@ -185,7 +185,7 @@ class Scraper(object):
 
         file_cnt = 0
         sent_cnts = [0] * self.n_classes
-        extracted_file_ids = []
+        extracted_file_id_list = [[] for _ in range(self.n_classes)]
         scraped_file_ids = []
         date_chunks = get_date_chunks(self.f, self.u, intv=day_intv)
         classifications = self.classifications[:] # make a copy so we can modify later
@@ -232,7 +232,9 @@ class Scraper(object):
                         file_cnt += 1
                         for i in range(len(text_lists)):
                             sent_cnts[i] += len(text_lists[i])
-                        extracted_file_ids.append(meta_record['id'])
+                        for i, text_list in enumerate(text_lists):
+                            if len(text_list) > 0:
+                                extracted_file_id_list[i].append(meta_record['id'])
 
                 for i, sent_cnt in enumerate(sent_cnts):
                     if not termination_reached[i] and sent_cnt >= self.max_sent:
@@ -251,7 +253,10 @@ class Scraper(object):
         print('Fetching text is completed in {0:.1f} seconds.'.format(t1 - t0))
         print('File counts: {:d}, sentence counts: {}'.format(file_cnt, sent_cnts))
 
-        file_ids = ['Scraped'] + scraped_file_ids + ['Extracted'] + extracted_file_ids
+        file_ids = ['Scraped'] + scraped_file_ids
+        for i, extracted_file_ids in enumerate(extracted_file_id_list):
+            file_ids += ['Extracted - class {}'.format(i)]
+            file_ids += extracted_file_ids
         save_text(file_ids, save_to=log_to, append=append)
 
         return sent_cnts
