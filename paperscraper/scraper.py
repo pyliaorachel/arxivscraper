@@ -204,14 +204,10 @@ class Scraper(object):
                 # Fetch
                 try:
                     response = urlopen(url)
-                except HTTPError as e:
-                    if e.code == 503:
-                        to = int(e.hdrs.get('retry-after', 30))
-                        print('Got 503. Retrying fter {0:d} seconds.'.format(self.t))
-                        time.sleep(self.t)
-                        continue
-                    else:
-                        raise
+                except Exception as e:
+                    print(e)
+                    r += 1 # avoid redoing, may never succeed
+                    continue
 
                 # Check content type
                 if response.getheader('Content-Type') == self.content_type:
