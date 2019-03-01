@@ -31,7 +31,7 @@ setup(
     keywords = ["arxiv", "scraper", "api", "citation"],
     license = "MIT",
     install_requires=[
-        'trie-search'
+        'marisa-trie'
     ],
     classifiers = [
         "Programming Language :: Python :: 2",

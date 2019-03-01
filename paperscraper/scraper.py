@@ -18,7 +18,7 @@ else:
     from urllib import urlencode
     from urllib2 import HTTPError, urlopen
 
-import trie_search
+import marisa_trie
 
 from .record import Record
 from .utils.const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR
@@ -89,7 +89,7 @@ class Scraper(object):
             self.append_all = False
             self.keys = filters.keys()
             for k, v in self.filters.items():
-                self.filters[k] = trie_search.TrieSearch(v)
+                self.filters[k] = marisa_trie.Trie(v)
 
     @property
     def n_classes(self):
