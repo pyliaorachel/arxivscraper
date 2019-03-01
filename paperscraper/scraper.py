@@ -239,9 +239,11 @@ class Scraper(object):
 
         file_ids = ['Scraped'] + scraped_file_ids + ['Extracted'] + extracted_file_ids
         save_text(file_ids, save_to=log_to, append=append)
+
+        return sent_cnts
     
     def scrape_text(self, site, *args, **kwargs):
         if site == 'arxiv':
-            self.scrape_arxiv_text(*args, **kwargs)
+            return self.scrape_arxiv_text(*args, **kwargs)
         else:
             print('site \'{}\' not supported'.format(site))

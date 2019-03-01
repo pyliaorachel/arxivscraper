@@ -27,7 +27,7 @@ scraper = Scraper(category='physics:cond-mat', date_from='2017-05-27', date_unti
 Once we built an instance of the scraper, we can start the scraping:
 
 ```python
-scraper.scrape_text('arxiv', save_to='test.txt', log_to='test.log')
+sent_cnts = scraper.scrape_text('arxiv', save_to='test.txt', log_to='test.log')
 ```
 
 The scraper scrapes at an interval of 10 days.
@@ -59,7 +59,7 @@ To have more control over the output, you could supply a dictionary to filter ou
 ```python
 from paperscraper.scraper import Scraper
 scraper = Scraper(category='stat', date_from='2017-08-01', date_until='2017-08-10', t=10, filters={'categories':['stat.ml'],'abstract':['learning']})
-scraper.scrape_text('arxiv', save_to='test.txt', log_to='test.log')
+sent_cnts = scraper.scrape_text('arxiv', save_to='test.txt', log_to='test.log')
 ```
 
 > In addition to `categories` and `abstract`, other available keys for `filters` are: `authors` and `title`.
@@ -83,7 +83,7 @@ classifications = [
 scraper = Scraper(
   category='physics:cond-mat', date_from='2017-05-27', date_until='2017-05-29',
   classifications=classifications)
-scraper.scrape_text('arxiv', save_to=['class1.txt', 'class2.txt'], log_to='test.log')
+sent_cnts = scraper.scrape_text('arxiv', save_to=['class1.txt', 'class2.txt'], log_to='test.log')
 ```
 
 ## Supported Sites
