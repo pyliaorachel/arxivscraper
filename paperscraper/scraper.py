@@ -194,7 +194,9 @@ class Scraper(object):
             print('fetching data from ', start, ' to ', end, '...')
 
             meta_records = self.scrape_arxiv_meta(date_from=start, date_until=end)
-            for meta_record in meta_records:
+            r = 0
+            while r < len(meta_records):
+                meta_record = meta_records[r]
                 url = self.eprint_url(meta_record['id'])
                 scraped_file_ids.append(meta_record['id'])
                 print(url)
@@ -214,7 +216,14 @@ class Scraper(object):
                 # Check content type
                 if response.getheader('Content-Type') == self.content_type:
                     # Decompress, extract, and save
-                    tar_file = save_tar(response.read())                        # save to temp file
+                    try:
+                        bin = response.read()
+                    except Exception as e:
+                        print(e)
+                        r += 1 # avoid redoing, may never succeed
+                        continue
+
+                    tar_file = save_tar(bin)                                    # save to temp file
                     output_dir = untar(tar_file, exts=self.text_file_exts)      # decompress temp file
                     if output_dir:
                         text_lists = extract_text(output_dir, exts=self.text_file_exts, classifications=classifications, meta=meta_record)
@@ -233,6 +242,7 @@ class Scraper(object):
 
                 if all(termination_reached):
                     break
+                r += 1
 
             if all(termination_reached):
                 break
