@@ -64,6 +64,28 @@ scraper.scrape_text('arxiv', save_to='test.txt', log_to='test.log')
 
 > In addition to `categories` and `abstract`, other available keys for `filters` are: `authors` and `title`.
 
+### With classification
+
+We can pass in custom classification filters to classify the papers and text.
+
+To do so, we define a list of filters that takes in a tuple `(text_list, institutes)`
+of the paper and returns a boolean indicating whether it belongs to the class.
+
+The following example shows how to classify the papers into two classes,
+one with the number of institutes smaller than 2, another with those greater than 2.
+
+```python
+from paperscraper.scraper import Scraper
+classifications = [
+  lambda x: len(x[1]) <= 2,
+  lambda x: len(x[1]) > 2
+]
+scraper = Scraper(
+  category='physics:cond-mat', date_from='2017-05-27', date_until='2017-05-29',
+  classifications=classifications)
+scraper.scrape_text('arxiv', save_to=['class1.txt', 'class2.txt'], log_to='test.log')
+```
+
 ## Supported Sites
 
 - [arXiv.org](https://arxiv.org/)
