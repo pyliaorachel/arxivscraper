@@ -28,9 +28,6 @@ setup(
     author = "Mahdi Sadjadi, Peiyu Liao",
     author_email = "pyliao@stanford.edu",
     url = "https://github.com/pyliaorachel/paperscraper",
-    install_requires = [
-        "tex2py"
-    ],
     keywords = ["arxiv", "scraper", "api", "citation"],
     license = "MIT",
     classifiers = [
