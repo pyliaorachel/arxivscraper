@@ -8,10 +8,11 @@ def find_institutes(text):
     institutes = []
     institute_titles = [r'University', r'Institute', r'College']
     for title in institute_titles:
-        pattern = r'{([^{},]*?' + title + r'.*?)[,}]'
-        institutes += re.findall(pattern, text) # {...title..., or {...title...}
-        pattern = r',([^{},]*?' + title + r'.*?)[,}]'
-        institutes += re.findall(pattern, text) # ,...title..., or ,...title...}
+        pattern = r'{.*}'
+        in_brackets = re.findall(pattern, text)
+        for in_bracket in in_brackets:
+            pattern = r'[^a-zA-Z\s]([a-zA-Z\s]*' + title + r'[a-zA-Z\s]*)[^a-zA-Z\s]'
+            institutes += re.findall(pattern, text)
 
     institutes = [clean_text(ins).lower() for ins in institutes]
     return institutes
