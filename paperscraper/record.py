@@ -1,4 +1,4 @@
-from .const import ARXIV
+from .utils.const import ARXIV
 
 
 class Record(object):

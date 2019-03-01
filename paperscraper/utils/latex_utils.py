@@ -43,22 +43,26 @@ def clean_text(text):
         text, clean = remove_pattern(r'\$\$.*?\$\$', text, clean, re.MULTILINE) # remove this first so the next one won't find $$
         text, clean = remove_pattern(r'\$.*?\$', text, clean, re.MULTILINE)
         # Remove brackets
-        text, clean = remove_pattern(r'\[.*?\]', text, clean, re.MULTILINE)
-        text, clean = remove_pattern(r'{.*?}', text, clean, re.MULTILINE)
+        text, clean = remove_pattern(r'\[[^\[]*?\]', text, clean, re.MULTILINE)
+        text, clean = remove_pattern(r'{[^{]*?}', text, clean, re.MULTILINE)
         # Remove comments
         text, clean = remove_pattern(r'%.*$', text, clean, re.MULTILINE)
 
     return text.strip()
 
-def text_from_latex(fpath, classifications=None, meta=None):
+def text_from_latex(fpath, classifications=None, meta=None, is_class=None):
     """
     Extract from sections and subsections.
     Remove latex specific tokens.
     """
     if classifications is None:
         classifications = [lambda x: True] # return all text as one class
+        is_class = [True]
+    elif is_class is None:
+        is_class = [True for i in range(len(classifications))]
 
-    text_lists = [[] for _ in range(len(classifications))]
+    n_classes = len(classifications)
+    text_lists = [[] for _ in range(n_classes)]
     if os.path.isfile(fpath):
         text_list = []
         institutes = []
@@ -95,7 +99,10 @@ def text_from_latex(fpath, classifications=None, meta=None):
         
         # Classify the text
         for i, filt in enumerate(classifications):
-            if filt((text_list, institutes, meta)):
-                text_lists[i] += text_list
+            if is_class[i]:
+                if filt((text_list, institutes, meta)):
+                    text_lists[i] += text_list
+                else:
+                    is_class[i] = False
 
-    return text_lists
+    return text_lists, is_class

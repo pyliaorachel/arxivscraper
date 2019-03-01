@@ -57,19 +57,27 @@ def save_classified_text(text_lists, save_to, append=False):
     for text_list, save_path in zip(text_lists, save_to):
         save_text(text_list, save_path, append=append)
 
-def extract_text_from_file(fpath, classifications=None, meta=None):
-    n_classes = len(classifications) if classifications is not None else 1
+def extract_text_from_file(fpath, classifications=None, meta=None, is_class=None):
+    if classifications is None:
+        classifications = [lambda x: True] # return all text as one class
+        is_class = [True]
+    elif is_class is None:
+        is_class = [True for i in range(len(classifications))]
+
+    n_classes = len(classifications)
     text_lists = [[] for _ in range(n_classes)]
     if os.path.isfile(fpath):
         if fpath.endswith('tex'):
-            this_text_lists = text_from_latex(fpath, classifications=classifications, meta=meta)
-            for i in range(n_classes):
-                text_lists[i] += this_text_lists[i]
-    return text_lists
+            text_lists, is_class = text_from_latex(fpath, classifications=classifications, meta=meta, is_class=is_class)
+    return text_lists, is_class
 
 def extract_text(path, exts=[''], classifications=None, meta=None):
-    n_classes = len(classifications) if classifications is not None else 1
+    if classifications is None:
+        classifications = [lambda x: True] # return all text as one class
+
+    n_classes = len(classifications)
     text_lists = [[] for _ in range(n_classes)]
+    is_class = [True for i in range(n_classes)]
 
     # Extract from files in directory if path is directory
     if os.path.isdir(path):
@@ -77,14 +85,24 @@ def extract_text(path, exts=[''], classifications=None, meta=None):
             for fname in fnames:
                 if has_ext(fname, exts=exts):
                     fpath = os.path.join(dpath, fname)
-                    this_text_lists = extract_text_from_file(fpath, classifications=classifications, meta=meta)
+                    this_text_lists, is_class = extract_text_from_file(fpath, classifications=classifications, meta=meta, is_class=is_class)
+
+                    # If documents does not pass any classification, return nothing
+                    if not any(is_class):
+                        return []
+
                     for i in range(n_classes):
                         text_lists[i] += this_text_lists[i]
     # Else extract from file
     elif os.path.isfile(path):
         if has_ext(path, exts=exts):
-            text_lists = extract_text_from_file(path, classifications=classifications, meta=meta)
+            text_lists, is_class = extract_text_from_file(path, classifications=classifications, meta=meta, is_class=is_class)
     # Not valid path
     else:
         return False
+
+    # Remove text of invalid classes
+    for i, c in enumerate(is_class):
+        if not c:
+            text_lists[i] = []
     return text_lists

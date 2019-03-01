@@ -21,7 +21,7 @@ else:
 import trie_search
 
 from .record import Record
-from .const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR
+from .utils.const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR
 from .utils.utils import get_date_chunks
 from .utils.file_utils import save_tar, untar, save_text, save_classified_text, extract_text
 
