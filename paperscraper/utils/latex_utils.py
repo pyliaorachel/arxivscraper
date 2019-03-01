@@ -100,7 +100,7 @@ def text_from_latex(fpath, classifications=None, meta=None, is_class=None):
         # Classify the text
         for i, filt in enumerate(classifications):
             if is_class[i]:
-                if filt((text_list, institutes, meta)):
+                if filt((text_list, institutes, meta, is_main_file)):
                     text_lists[i] += text_list
                 else:
                     is_class[i] = False

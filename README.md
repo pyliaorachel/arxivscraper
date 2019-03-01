@@ -68,7 +68,7 @@ sent_cnts = scraper.scrape_text('arxiv', save_to='test.txt', log_to='test.log')
 
 We can pass in custom classification filters to classify the papers and text.
 
-To do so, we define a list of filters that takes in a tuple `(text_list, institutes, meta)`
+To do so, we define a list of filters that takes in a tuple `(text_list, institutes, meta, is_main_file)`
 of the paper and returns a boolean indicating whether it belongs to the class.
 
 The following example shows how to classify the papers into two classes,
