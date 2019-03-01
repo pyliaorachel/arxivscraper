@@ -8,9 +8,9 @@ def find_institutes(text):
     institutes = []
     institute_titles = [r'University', r'Institute', r'College']
     for title in institute_titles:
-        pattern = r'{([^{,]*?' + title + r'.*?)[,}]'
+        pattern = r'{([^{},]*?' + title + r'.*?)[,}]'
         institutes += re.findall(pattern, text) # {...title..., or {...title...}
-        pattern = r',([^{,]*?' + title + r'.*?)[,}]'
+        pattern = r',([^{},]*?' + title + r'.*?)[,}]'
         institutes += re.findall(pattern, text) # ,...title..., or ,...title...}
 
     institutes = [clean_text(ins).lower() for ins in institutes]
@@ -36,8 +36,8 @@ def clean_text(text):
     while not clean:
         clean = True
         # Remove commands
-        text, clean = remove_pattern(r'~?\\.*?{.*?}[\s$]+', text, clean, re.MULTILINE)
-        text, clean = remove_pattern(r'~?\\.*?\[.*?\][\s$]+', text, clean, re.MULTILINE)
+        text, clean = remove_pattern(r'~?\\.*?{[^{]*?}[\s$]+', text, clean, re.MULTILINE)
+        text, clean = remove_pattern(r'~?\\.*?\[[^\[]*?\][\s$]+', text, clean, re.MULTILINE)
         text, clean = remove_pattern(r'~?\\.*?[\s$]+', text, clean, re.MULTILINE)
         # Remove math
         text, clean = remove_pattern(r'\$\$.*?\$\$', text, clean, re.MULTILINE) # remove this first so the next one won't find $$
