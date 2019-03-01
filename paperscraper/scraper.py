@@ -213,7 +213,7 @@ class Scraper(object):
                     tar_file = save_tar(response.read())                        # save to temp file
                     output_dir = untar(tar_file, exts=self.text_file_exts)      # decompress temp file
                     if output_dir:
-                        text_lists = extract_text(output_dir, exts=self.text_file_exts, classifications=classifications)
+                        text_lists = extract_text(output_dir, exts=self.text_file_exts, classifications=classifications, meta=meta_record)
                         save_classified_text(text_lists, save_to=save_to, append=True)
 
                         file_cnt += 1

@@ -57,17 +57,17 @@ def save_classified_text(text_lists, save_to, append=False):
     for text_list, save_path in zip(text_lists, save_to):
         save_text(text_list, save_path, append=append)
 
-def extract_text_from_file(fpath, classifications=None):
+def extract_text_from_file(fpath, classifications=None, meta=None):
     n_classes = len(classifications) if classifications is not None else 1
     text_lists = [[] for _ in range(n_classes)]
     if os.path.isfile(fpath):
         if fpath.endswith('tex'):
-            this_text_lists = text_from_latex(fpath, classifications=classifications)
+            this_text_lists = text_from_latex(fpath, classifications=classifications, meta=meta)
             for i in range(n_classes):
                 text_lists[i] += this_text_lists[i]
     return text_lists
 
-def extract_text(path, exts=[''], classifications=None):
+def extract_text(path, exts=[''], classifications=None, meta=None):
     n_classes = len(classifications) if classifications is not None else 1
     text_lists = [[] for _ in range(n_classes)]
 
@@ -77,13 +77,13 @@ def extract_text(path, exts=[''], classifications=None):
             for fname in fnames:
                 if has_ext(fname, exts=exts):
                     fpath = os.path.join(dpath, fname)
-                    this_text_lists = extract_text_from_file(fpath, classifications=classifications)
+                    this_text_lists = extract_text_from_file(fpath, classifications=classifications, meta=meta)
                     for i in range(n_classes):
                         text_lists[i] += this_text_lists[i]
     # Else extract from file
     elif os.path.isfile(path):
         if has_ext(path, exts=exts):
-            text_lists = extract_text_from_file(path, classifications=classifications)
+            text_lists = extract_text_from_file(path, classifications=classifications, meta=meta)
     # Not valid path
     else:
         return False

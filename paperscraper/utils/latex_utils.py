@@ -50,7 +50,7 @@ def clean_text(text):
 
     return text.strip()
 
-def text_from_latex(fpath, classifications=None):
+def text_from_latex(fpath, classifications=None, meta=None):
     """
     Extract from sections and subsections.
     Remove latex specific tokens.
@@ -95,7 +95,7 @@ def text_from_latex(fpath, classifications=None):
         
         # Classify the text
         for i, filt in enumerate(classifications):
-            if filt((text_list, institutes)):
+            if filt((text_list, institutes, meta)):
                 text_lists[i] += text_list
 
     return text_lists
