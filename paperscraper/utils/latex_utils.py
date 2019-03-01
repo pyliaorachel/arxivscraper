@@ -6,7 +6,7 @@ def find_institutes(text):
     text = ' '.join(text.strip().split())
 
     institutes = []
-    institute_titles = [r'University', r'Institute']
+    institute_titles = [r'University', r'Institute', r'College']
     for title in institute_titles:
         pattern = r'{([^{,]*?' + title + r'.*?)[,}]'
         institutes += re.findall(pattern, text) # {...title..., or {...title...}
