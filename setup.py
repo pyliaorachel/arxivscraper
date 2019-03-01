@@ -30,6 +30,9 @@ setup(
     url = "https://github.com/pyliaorachel/paperscraper",
     keywords = ["arxiv", "scraper", "api", "citation"],
     license = "MIT",
+    install_requires=[
+        'trie-search'
+    ],
     classifiers = [
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
