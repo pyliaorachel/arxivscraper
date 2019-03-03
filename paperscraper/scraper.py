@@ -207,6 +207,16 @@ class Scraper(object):
                 # Fetch
                 try:
                     response = urlopen(url)
+                except HTTPError as e:
+                    if e.code == 503 or e.code == 104:
+                        to = int(e.hdrs.get('retry-after', 30))
+                        print('Got {}. Retrying after {0:d} seconds.'.format(e.code, self.t))
+                        time.sleep(self.t)
+                        continue
+                    else:
+                        print(e)
+                        r += 1 # avoid redoing, may never succeed
+                        continue
                 except Exception as e:
                     print(e)
                     r += 1 # avoid redoing, may never succeed
@@ -283,6 +293,15 @@ class Scraper(object):
                 # Fetch
                 try:
                     response = urlopen(req)
+                except HTTPError as e:
+                    if e.code == 503 or e.code == 104:
+                        to = int(e.hdrs.get('retry-after', 30))
+                        print('Got {}. Retrying after {0:d} seconds.'.format(e.code, self.t))
+                        time.sleep(self.t)
+                        continue
+                    else:
+                        print(e)
+                        continue
                 except Exception as e:
                     print(e)
                     continue
