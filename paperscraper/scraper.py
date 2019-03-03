@@ -124,7 +124,7 @@ class Scraper(object):
             except HTTPError as e:
                 if e.code == 503:
                     to = int(e.hdrs.get('retry-after', 30))
-                    print('Got 503. Retrying after {0:d} seconds.'.format(self.t))
+                    print('Got 503. Retrying after {} seconds.'.format(self.t))
                     time.sleep(self.t)
                     continue
                 else:
@@ -210,7 +210,7 @@ class Scraper(object):
                 except HTTPError as e:
                     if e.code == 503 or e.code == 104:
                         to = int(e.hdrs.get('retry-after', 30))
-                        print('Got {}. Retrying after {0:d} seconds.'.format(e.code, self.t))
+                        print('Got {}. Retrying after {} seconds.'.format(e.code, self.t))
                         time.sleep(self.t)
                         continue
                     else:
@@ -296,7 +296,7 @@ class Scraper(object):
                 except HTTPError as e:
                     if e.code == 503 or e.code == 104:
                         to = int(e.hdrs.get('retry-after', 30))
-                        print('Got {}. Retrying after {0:d} seconds.'.format(e.code, self.t))
+                        print('Got {}. Retrying after {} seconds.'.format(e.code, self.t))
                         time.sleep(self.t)
                         continue
                     else:
