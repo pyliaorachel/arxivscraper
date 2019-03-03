@@ -31,7 +31,9 @@ setup(
     keywords = ["arxiv", "scraper", "api", "citation"],
     license = "MIT",
     install_requires=[
-        'marisa-trie'
+        'marisa-trie',
+        'BeautifulSoup4',
+        'pdftotext'
     ],
     classifiers = [
         "Programming Language :: Python :: 2",
