@@ -50,12 +50,12 @@ def untar(fpath, output_dir='/tmp/temp', exist_ok=True, exts=['']):
 def download_pdf(url, output_file='/tmp/temp.pdf'):
     if has_ext(url, ['pdf']):
         try:
-            res = urlopen(url, timeout=1)
+            with open(output_file, 'wb') as fout:
+                res = urlopen(url, timeout=1)
+                fout.write(res.read())
         except Exception as e:
             print(e)
             return False
-        with open(output_file, 'wb') as fout:
-            fout.write(res.read())
         return output_file
     return False
 
