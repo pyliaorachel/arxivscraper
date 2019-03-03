@@ -98,10 +98,10 @@ class Scraper(object):
     def set_classifications(self, classifications):
         self.classifications = classifications
 
-    def meta_url(self, f, u, cat):
+    def arxiv_meta_url(self, f, u, cat):
         return '{}from={}&until={}&metadataPrefix=arXiv&set={}'.format(META_BASE, f, u, cat)
 
-    def eprint_url(self, id):
+    def arxiv_eprint_url(self, id):
         return '{}{}'.format(E_PRINT_BASE, id)
 
     def scrape_arxiv_meta(self, category=None, date_from=None, date_until=None):
@@ -110,7 +110,7 @@ class Scraper(object):
         date_until = self.u if date_until is None else date_until
 
         t0 = time.time()
-        url = self.meta_url(date_from, date_until, category)
+        url = self.arxiv_meta_url(date_from, date_until, category)
         print(url)
         ds = []
         k = 1
@@ -197,7 +197,7 @@ class Scraper(object):
             r = 0
             while r < len(meta_records):
                 meta_record = meta_records[r]
-                url = self.eprint_url(meta_record['id'])
+                url = self.arxiv_eprint_url(meta_record['id'])
                 scraped_file_ids.append(meta_record['id'])
                 print(url)
 
