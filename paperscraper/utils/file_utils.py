@@ -3,8 +3,11 @@ import tarfile
 from io import BytesIO
 import os
 import shutil
+from urllib.request import urlopen
 
 from .latex_utils import text_from_latex
+from .pdf_utils import text_from_pdf
+from .utils import always_true
 
 
 def save_tar(bin, output_file='/tmp/temp.tar.gz'):
@@ -44,6 +47,18 @@ def untar(fpath, output_dir='/tmp/temp', exist_ok=True, exts=['']):
         return output_dir
     return False
 
+def download_pdf(url, output_file='/tmp/temp.pdf'):
+    if has_ext(url, ['pdf']):
+        try:
+            res = urlopen(url, timeout=1)
+        except Exception as e:
+            print(e)
+            return False
+        with open(output_file, 'wb') as fout:
+            fout.write(res.read())
+        return output_file
+    return False
+
 def has_ext(fname, exts):
     return any([fname.endswith('.{}'.format(ext)) for ext in exts])
 
@@ -57,9 +72,9 @@ def save_classified_text(text_lists, save_to, append=False):
     for text_list, save_path in zip(text_lists, save_to):
         save_text(text_list, save_path, append=append)
 
-def extract_text_from_file(fpath, classifications=None, meta=None, is_class=None):
+def extract_text_from_file(fpath, classifications=None, meta=None, is_class=None, filter_text=always_true):
     if classifications is None:
-        classifications = [lambda x: True] # return all text as one class
+        classifications = [always_true] # return all text as one class
         is_class = [True]
     elif is_class is None:
         is_class = [True for i in range(len(classifications))]
@@ -68,12 +83,16 @@ def extract_text_from_file(fpath, classifications=None, meta=None, is_class=None
     text_lists = [[] for _ in range(n_classes)]
     if os.path.isfile(fpath):
         if fpath.endswith('tex'):
-            text_lists, is_class = text_from_latex(fpath, classifications=classifications, meta=meta, is_class=is_class)
+            text_lists, is_class = text_from_latex(
+                fpath, classifications=classifications, meta=meta,
+                is_class=is_class, filter_text=filter_text)
+        elif fpath.endswith('pdf'):
+            text_lists = text_from_pdf(fpath, filter_text=filter_text)
     return text_lists, is_class
 
-def extract_text(path, exts=[''], classifications=None, meta=None):
+def extract_text(path, exts=[''], classifications=None, meta=None, filter_text=always_true):
     if classifications is None:
-        classifications = [lambda x: True] # return all text as one class
+        classifications = [always_true] # return all text as one class
 
     n_classes = len(classifications)
     text_lists = [[] for _ in range(n_classes)]
@@ -85,7 +104,10 @@ def extract_text(path, exts=[''], classifications=None, meta=None):
             for fname in fnames:
                 if has_ext(fname, exts=exts):
                     fpath = os.path.join(dpath, fname)
-                    this_text_lists, is_class = extract_text_from_file(fpath, classifications=classifications, meta=meta, is_class=is_class)
+                    this_text_lists, is_class = extract_text_from_file(
+                        fpath, classifications=classifications, meta=meta,
+                        is_class=is_class, filter_text=filter_text
+                    )
 
                     # If documents does not pass any classification, return nothing
                     if not any(is_class):
@@ -96,7 +118,9 @@ def extract_text(path, exts=[''], classifications=None, meta=None):
     # Else extract from file
     elif os.path.isfile(path):
         if has_ext(path, exts=exts):
-            text_lists, is_class = extract_text_from_file(path, classifications=classifications, meta=meta, is_class=is_class)
+            text_lists, is_class = extract_text_from_file(
+                path, classifications=classifications, meta=meta,
+                is_class=is_class, filter_text=filter_text)
     # Not valid path
     else:
         return False

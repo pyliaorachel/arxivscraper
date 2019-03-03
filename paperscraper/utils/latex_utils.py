@@ -1,6 +1,8 @@
 import re
 import os
 
+from .utils import always_true, split_sent
+
 
 def find_institutes(text):
     text = ' '.join(text.strip().split())
@@ -51,7 +53,7 @@ def clean_text(text):
 
     return text.strip()
 
-def text_from_latex(fpath, classifications=None, meta=None, is_class=None):
+def text_from_latex(fpath, classifications=None, meta=None, is_class=None, filter_text=always_true):
     """
     Extract from sections and subsections.
     Remove latex specific tokens.
@@ -90,13 +92,14 @@ def text_from_latex(fpath, classifications=None, meta=None, is_class=None):
                             institutes += find_institutes(text)
 
                         cleaned_text = clean_text(text)
-                        if cleaned_text != '':
-                            text_list.append(cleaned_text)
+                        sents = split_sent(cleaned_text)
+                        text_list += [sent for sent in sents if filter_text(sent)]
                         text = ''
         if text != '':
             cleaned_text = clean_text(text)
-            if cleaned_text != '':
-                text_list.append(cleaned_text)
+            sents = split_sent(cleaned_text)
+            text_list += [sent for sent in sents if filter_text(sent)]
+            text = ''
         
         # Classify the text
         for i, filt in enumerate(classifications):

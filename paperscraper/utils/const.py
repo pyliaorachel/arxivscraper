@@ -3,6 +3,7 @@ OAI = '{http://www.openarchives.org/OAI/2.0/}'
 ARXIV = '{http://arxiv.org/OAI/arXiv/}'
 META_BASE = 'http://export.arxiv.org/oai2?verb=ListRecords&'
 E_PRINT_BASE = 'https://arxiv.org/e-print/'
+GOOGLE_SCHOLAR_BASE = 'https://scholar.google.com/scholar'
 
 # arXiv categories
 CATS = [

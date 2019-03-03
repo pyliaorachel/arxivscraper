@@ -10,7 +10,7 @@ Use `pip` (or `pip3` for python3) to install dependencies:
 $ pip install -r requirements.txt
 ```
 
-## Examples
+## arXiv Examples
 
 ### Without filtering
 
@@ -86,9 +86,27 @@ scraper = Scraper(
 sent_cnts = scraper.scrape_text('arxiv', save_to=['class1.txt', 'class2.txt'], log_to='test.log')
 ```
 
+## Google Scholar Examples
+
+You can scrape pdf text from [Google Scholar](https://scholar.google.com/scholar) given some queries.
+We can pass in `filter_text` to `Scraper` to filter out Chinese text.
+Let's scrape some Chinese papers from [Google Scholar](https://scholar.google.com/scholar)
+using queries `['人工智慧', '大數據']`:
+
+```python
+import re
+from paperscraper.scraper import Scraper
+
+is_chinese = lambda text: len(re.findall('[\u4e00-\u9fff]+', text)) > 0
+queries = ['人工智慧', '大數據']
+scraper = Scraper(filter_text=is_chinese)
+sent_cnt = scraper.scrape_text('google-scholar', save_to='test.txt', log_to='test.log', queries=queries)
+```
+
 ## Supported Sites
 
 - [arXiv.org](https://arxiv.org/)
+- [Google Scholar](https://scholar.google.com/scholar)
 
 ## Categories
 

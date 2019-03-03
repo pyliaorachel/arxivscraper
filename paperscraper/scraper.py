@@ -9,21 +9,17 @@ import xml.etree.ElementTree as ET
 import datetime
 import time
 import sys
-PYTHON3 = sys.version_info[0] == 3
-if PYTHON3:
-    from urllib.parse import urlencode
-    from urllib.request import urlopen
-    from urllib.error import HTTPError
-else:
-    from urllib import urlencode
-    from urllib2 import HTTPError, urlopen
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
+from urllib.error import HTTPError
 
 import marisa_trie
+from bs4 import BeautifulSoup
 
 from .record import Record
-from .utils.const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR
-from .utils.utils import get_date_chunks
-from .utils.file_utils import save_tar, untar, save_text, save_classified_text, extract_text
+from .utils.const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR, GOOGLE_SCHOLAR_BASE
+from .utils.utils import get_date_chunks, is_chinese, always_true, always_false
+from .utils.file_utils import save_tar, untar, save_text, save_classified_text, extract_text, download_pdf
 
 
 class Scraper(object):
@@ -58,18 +54,19 @@ class Scraper(object):
     """
 
     def __init__(self,
-        category, date_from=None, date_until=None, t=30,
+        category='', date_from=None, date_until=None, t=30,
         filters={}, content_type=TAR, text_file_exts=['tex'], max_sent=100,
-        classifications=None
+        classifications=None, filter_text=always_true
     ):
         self.cat = str(category)
         self.t = t
         self.content_type = content_type
         self.text_file_exts = text_file_exts
         self.max_sent = max_sent
+        self.filter_text = filter_text
 
         if classifications is None:
-            classifications = [lambda x: True] # All in one class
+            classifications = [always_true] # All in one class
         self.classifications = classifications
 
         DateToday = datetime.date.today()
@@ -103,6 +100,12 @@ class Scraper(object):
 
     def arxiv_eprint_url(self, id):
         return '{}{}'.format(E_PRINT_BASE, id)
+
+    def google_scholar_req(self, query, page):
+        params = dict(q=str(query), start=str(page*10))
+        query = urlencode([(k, v.encode('utf-8')) for k, v in params.items()])
+        headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'}
+        return Request(GOOGLE_SCHOLAR_BASE + '?' + query, headers=headers)
 
     def scrape_arxiv_meta(self, category=None, date_from=None, date_until=None):
         category = self.cat if category is None else category
@@ -235,7 +238,7 @@ class Scraper(object):
                 for i, sent_cnt in enumerate(sent_cnts):
                     if not termination_reached[i] and sent_cnt >= self.max_sent:
                         print('Max number of sentences reached for class {} with {} sentences.'.format(i, sent_cnt))
-                        classifications[i] = lambda x: False
+                        classifications[i] = always_false
                         termination_reached[i] = True
 
                 if all(termination_reached):
@@ -256,9 +259,72 @@ class Scraper(object):
         save_text(file_ids, save_to=log_to, append=append)
 
         return sent_cnts
+
+    def scrape_google_scholar(self, save_to, log_to, queries, append=False):
+        # Empty the save files
+        if not append:
+            with open(save_to, 'w'): pass
+            with open(log_to, 'w'): pass
+
+        # Main
+        t0 = time.time()
+
+        file_cnt = 0
+        sent_cnt = 0
+        extracted_file_ids = []
+        scraped_file_ids = []
+        for query in queries:
+            print('fetching data for query', query, '...')
+
+            for p in range(100):
+                req = self.google_scholar_req(query, p)
+                print(req.get_full_url())
+
+                # Fetch
+                try:
+                    response = urlopen(req)
+                except Exception as e:
+                    print(e)
+                    continue
+
+                page = BeautifulSoup(response, 'html.parser')
+                scraped_file_ids.append('{}:{}'.format(query, p))
+
+                # Go through each link
+                pdf_divs = page.find_all('div', attrs={'class': 'gs_or_ggsm'})
+                for pdf_div in pdf_divs:
+                    pdf_a = pdf_div.findChild('a' , recursive=False) # pdf link should be the first child
+                    download_link = pdf_a.get('href')
+                    print('download', download_link)
+
+                    pdf_file = download_pdf(download_link)                      # save to temp file
+                    if pdf_file:
+                        text_lists = extract_text(pdf_file, exts=['pdf'], filter_text=self.filter_text)
+                        save_text(text_lists[0], save_to=save_to, append=True)
+
+                        file_cnt += 1
+                        sent_cnt += len(text_lists[0])
+                        extracted_file_ids.append('{}:{}:{}'.format(query, p, download_link))
+
+                if sent_cnt >= self.max_sent:
+                    break
+
+            if sent_cnt >= self.max_sent:
+                break
+
+        t1 = time.time()
+        print('Fetching text is completed in {0:.1f} seconds.'.format(t1 - t0))
+        print('File counts: {:d}, sentence counts: {}'.format(file_cnt, sent_cnt))
+
+        file_ids = ['Scraped'] + scraped_file_ids + ['Extracted'] + extracted_file_ids
+        save_text(file_ids, save_to=log_to, append=append)
+
+        return sent_cnt
     
     def scrape_text(self, site, *args, **kwargs):
         if site == 'arxiv':
             return self.scrape_arxiv_text(*args, **kwargs)
+        elif site == 'google-scholar':
+            return self.scrape_google_scholar(*args, **kwargs)
         else:
             print('site \'{}\' not supported'.format(site))
