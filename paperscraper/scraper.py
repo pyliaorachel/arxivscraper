@@ -12,6 +12,7 @@ import sys
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
+from socket import error as SocketError
 
 import marisa_trie
 from bs4 import BeautifulSoup
@@ -208,9 +209,18 @@ class Scraper(object):
                 try:
                     response = urlopen(url)
                 except HTTPError as e:
-                    if e.code == 503 or e.code == 104:
+                    if e.code == 503:
                         to = int(e.hdrs.get('retry-after', 30))
                         print('Got {}. Retrying after {} seconds.'.format(e.code, self.t))
+                        time.sleep(self.t)
+                        continue
+                    else:
+                        print(e)
+                        r += 1 # avoid redoing, may never succeed
+                        continue
+                except SocketError as e:
+                    if e.errno == 104:
+                        print('Got {}. Retrying after {} seconds.'.format(e.errno, self.t))
                         time.sleep(self.t)
                         continue
                     else:
@@ -293,10 +303,9 @@ class Scraper(object):
                 # Fetch
                 try:
                     response = urlopen(req)
-                except HTTPError as e:
-                    if e.code == 503 or e.code == 104:
-                        to = int(e.hdrs.get('retry-after', 30))
-                        print('Got {}. Retrying after {} seconds.'.format(e.code, self.t))
+                except SocketError as e:
+                    if e.errno == 104:
+                        print('Got {}. Retrying after {} seconds.'.format(e.errno, self.t))
                         time.sleep(self.t)
                         continue
                     else:
