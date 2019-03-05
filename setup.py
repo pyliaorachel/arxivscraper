@@ -33,7 +33,8 @@ setup(
     install_requires=[
         'marisa-trie',
         'BeautifulSoup4',
-        'pdftotext'
+        'pdftotext',
+        'selenium'
     ],
     classifiers = [
         "Programming Language :: Python :: 2",

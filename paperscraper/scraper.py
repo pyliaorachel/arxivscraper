@@ -16,9 +16,14 @@ from socket import error as SocketError
 
 import marisa_trie
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 
 from .record import Record
-from .utils.const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR, GOOGLE_SCHOLAR_BASE
+from .utils.const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR, GOOGLE_SCHOLAR_BASE, MS_ACADEMIC_BASE
 from .utils.utils import get_date_chunks, is_chinese, always_true, always_false
 from .utils.file_utils import save_tar, untar, save_text, save_classified_text, extract_text, download_pdf
 
@@ -107,6 +112,12 @@ class Scraper(object):
         query = urlencode([(k, v.encode('utf-8')) for k, v in params.items()])
         headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'}
         return Request(GOOGLE_SCHOLAR_BASE + '?' + query, headers=headers)
+
+    def ms_academic_url(self, query, page):
+        params = dict(q=str(query), iq='@{}@'.format(query))
+        params['from'] = str(page * 8)
+        query = urlencode([(k, v.encode('utf-8')) for k, v in params.items()])
+        return MS_ACADEMIC_BASE + '?' + query
 
     def scrape_arxiv_meta(self, category=None, date_from=None, date_until=None):
         category = self.cat if category is None else category
@@ -354,11 +365,103 @@ class Scraper(object):
         print('File counts: {:d}, sentence counts: {}'.format(file_cnt, sent_cnt))
 
         return sent_cnt
-    
+
+    def scrape_ms_academic(self, save_to, log_to, queries, append=False):
+        # Empty the save files
+        if not append:
+            with open(save_to, 'w'): pass
+            with open(log_to, 'w'): pass
+
+        # Main
+        t0 = time.time()
+
+        file_cnt = 0
+        sent_cnt = 0
+        extracted_file_ids = []
+        scraped_file_ids = []
+
+        driver = webdriver.Firefox()
+        is_quit = False
+        for query in queries:
+            print('fetching data for query', query, '...')
+
+            for p in range(100):
+                url = self.ms_academic_url(query, p)
+                print(url)
+
+                # Fetch
+                driver.get(url)
+                try:
+                    main = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'paper-title')))
+                except TimeoutException as e:
+                    print('Driver timeout:', e)
+                    break
+                except Exception as e:
+                    print('Driver exception:', e)
+                    driver.quit()
+                    is_quit = True
+                    break
+                scraped_file_ids.append('{}:{}'.format(query, p))
+
+                # Go through each link
+                paper_section_links = driver.find_elements_by_css_selector('section.paper-title > h2 > a')
+                paper_section_urls = [paper_section_link.get_attribute('href') for paper_section_link in paper_section_links]
+                if len(paper_section_urls) == 0:
+                    break
+                for paper_section_url in paper_section_urls:
+                    driver.get(paper_section_url)
+
+                    # Fetch detail page
+                    try:
+                        main = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ulist-fieldOfStudy')))
+                    except TimeoutException as e:
+                        print('Driver timeout:', e)
+                        break
+                    except Exception as e:
+                        print('Driver exception:', e)
+                        is_quit = True
+                        break
+
+                    # Find pdf link
+                    possible_pdfs = driver.find_elements_by_css_selector('ma-paper-detail > div > section:nth-of-type(2) > ma-ulist:nth-of-type(2) > div > div > ul > li > a')
+                    for pdf in possible_pdfs:
+                        download_link = pdf.get_attribute('href')
+                        if download_link.endswith('.pdf'):
+                            print('download', download_link)
+                            pdf_file = download_pdf(download_link) # save to temp file
+                            if pdf_file:
+                                text_lists = extract_text(pdf_file, exts=['pdf'], filter_text=self.filter_text)
+                                print(text_lists)
+                                save_text(text_lists[0], save_to=save_to, append=True)
+
+                                file_cnt += 1
+                                sent_cnt += len(text_lists[0])
+                                extracted_file_ids.append('{}:{}:{}'.format(query, p, download_link))
+
+                if sent_cnt >= self.max_sent or is_quit:
+                    break
+
+            file_ids = ['Scraped'] + scraped_file_ids + ['Extracted'] + extracted_file_ids
+            save_text(file_ids, save_to=log_to, append=True)
+            extracted_file_ids = []
+            scraped_file_ids = []
+
+            if sent_cnt >= self.max_sent or is_quit:
+                break
+
+        driver.quit()
+        t1 = time.time()
+        print('Fetching text is completed in {0:.1f} seconds.'.format(t1 - t0))
+        print('File counts: {:d}, sentence counts: {}'.format(file_cnt, sent_cnt))
+
+        return sent_cnt
+
     def scrape_text(self, site, *args, **kwargs):
         if site == 'arxiv':
             return self.scrape_arxiv_text(*args, **kwargs)
         elif site == 'google-scholar':
             return self.scrape_google_scholar(*args, **kwargs)
+        elif site == 'ms-academic':
+            return self.scrape_ms_academic(*args, **kwargs)
         else:
             print('site \'{}\' not supported'.format(site))

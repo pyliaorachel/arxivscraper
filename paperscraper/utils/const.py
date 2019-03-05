@@ -4,6 +4,7 @@ ARXIV = '{http://arxiv.org/OAI/arXiv/}'
 META_BASE = 'http://export.arxiv.org/oai2?verb=ListRecords&'
 E_PRINT_BASE = 'https://arxiv.org/e-print/'
 GOOGLE_SCHOLAR_BASE = 'https://scholar.google.com/scholar'
+MS_ACADEMIC_BASE = 'https://academic.microsoft.com/#/search'
 
 # arXiv categories
 CATS = [
