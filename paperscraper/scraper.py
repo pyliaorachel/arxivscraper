@@ -215,7 +215,8 @@ class Scraper(object):
                         time.sleep(self.t)
                         continue
                     else:
-                        print(e)
+                        print('HTTPError:', e)
+                        time.sleep(self.t)
                         r += 1 # avoid redoing, may never succeed
                         continue
                 except SocketError as e:
@@ -224,11 +225,13 @@ class Scraper(object):
                         time.sleep(self.t)
                         continue
                     else:
-                        print(e)
+                        print('SocketError:', e)
+                        time.sleep(self.t)
                         r += 1 # avoid redoing, may never succeed
                         continue
                 except Exception as e:
-                    print(e)
+                    print('Exception:', e)
+                    time.sleep(self.t)
                     r += 1 # avoid redoing, may never succeed
                     continue
 
@@ -238,7 +241,8 @@ class Scraper(object):
                     try:
                         bin = response.read()
                     except Exception as e:
-                        print(e)
+                        print('Response read error:', e)
+                        time.sleep(self.t)
                         r += 1 # avoid redoing, may never succeed
                         continue
 
@@ -307,10 +311,12 @@ class Scraper(object):
                         time.sleep(self.t)
                         continue
                     else:
-                        print(e)
+                        print('SocketError:', e)
+                        time.sleep(self.t)
                         continue
                 except Exception as e:
-                    print(e)
+                    print('Exception: ', e)
+                    time.sleep(self.t)
                     continue
 
                 page = BeautifulSoup(response, 'html.parser')
