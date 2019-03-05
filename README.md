@@ -86,9 +86,9 @@ scraper = Scraper(
 sent_cnts = scraper.scrape_text('arxiv', save_to=['class1.txt', 'class2.txt'], log_to='test.log')
 ```
 
-## Google Scholar Examples
+## Google Scholar & Microsoft Academic Search Examples
 
-You can scrape pdf text from [Google Scholar](https://scholar.google.com/scholar) given some queries.
+You can scrape pdf text from [Google Scholar](https://scholar.google.com/scholar) or [Microsoft Academic Search](https://academic.microsoft.com/) given some queries.
 We can pass in `filter_text` to `Scraper` to filter out Chinese text.
 Let's scrape some Chinese papers from [Google Scholar](https://scholar.google.com/scholar)
 using queries `['人工智慧', '大數據']`:
@@ -106,7 +106,11 @@ sent_cnt = scraper.scrape_text('google-scholar', save_to='test.txt', log_to='tes
 ## Supported Sites
 
 - [arXiv.org](https://arxiv.org/)
+  - Note: you will be blocked after some number of requests (not small though), and you can resume the process after some waiting time.
 - [Google Scholar](https://scholar.google.com/scholar)
+  - Note: Google block bots so you are likely to scrape only a small amount of results.
+- [Microsoft Academic Search](https://academic.microsoft.com/)
+  - Note: uses selenium to scrape. Not tested on large-scale scraping, but also likely to be blocked.
 
 ## Categories
 
@@ -139,3 +143,7 @@ Here is a list of all categories available on ArXiv. For a complete list of subc
 ## Credits
 
 The project is built upon [arxivscraper](http://doi.org/10.5281/zenodo.889853) by Mahdi Sadjadi, which scrapes meta data from arXiv.
+
+## Disclaimer
+
+Scraping from the above sites might be against their Terms of Service. The repository here is only for educational purpose, and the author does not take responsibility for your abuse of use.
