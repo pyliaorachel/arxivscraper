@@ -265,18 +265,16 @@ class Scraper(object):
                     break
                 r += 1
 
+            file_ids = ['Scraped'] + scraped_file_ids
+            for i, extracted_file_ids in enumerate(extracted_file_id_list):
+                file_ids += ['Extracted - class {}'.format(i)]
+                file_ids += extracted_file_ids
+            save_text(file_ids, save_to=log_to, append=True)
+            extracted_file_id_list = [[] for _ in range(self.n_classes)]
+            scraped_file_ids = []
+
             if all(termination_reached):
                 break
-
-        t1 = time.time()
-        print('Fetching text is completed in {0:.1f} seconds.'.format(t1 - t0))
-        print('File counts: {:d}, sentence counts: {}'.format(file_cnt, sent_cnts))
-
-        file_ids = ['Scraped'] + scraped_file_ids
-        for i, extracted_file_ids in enumerate(extracted_file_id_list):
-            file_ids += ['Extracted - class {}'.format(i)]
-            file_ids += extracted_file_ids
-        save_text(file_ids, save_to=log_to, append=append)
 
         return sent_cnts
 
@@ -337,15 +335,17 @@ class Scraper(object):
                 if sent_cnt >= self.max_sent:
                     break
 
+            file_ids = ['Scraped'] + scraped_file_ids + ['Extracted'] + extracted_file_ids
+            save_text(file_ids, save_to=log_to, append=True)
+            extracted_file_ids = []
+            scraped_file_ids = []
+
             if sent_cnt >= self.max_sent:
                 break
 
         t1 = time.time()
         print('Fetching text is completed in {0:.1f} seconds.'.format(t1 - t0))
         print('File counts: {:d}, sentence counts: {}'.format(file_cnt, sent_cnt))
-
-        file_ids = ['Scraped'] + scraped_file_ids + ['Extracted'] + extracted_file_ids
-        save_text(file_ids, save_to=log_to, append=append)
 
         return sent_cnt
     
