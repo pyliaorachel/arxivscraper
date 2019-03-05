@@ -12,7 +12,6 @@ import sys
 from urllib.parse import urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
-from socket import error as SocketError
 
 import marisa_trie
 from bs4 import BeautifulSoup
@@ -24,7 +23,7 @@ from selenium.common.exceptions import TimeoutException
 
 from .record import Record
 from .utils.const import OAI, ARXIV, META_BASE, E_PRINT_BASE, TAR, GOOGLE_SCHOLAR_BASE, MS_ACADEMIC_BASE
-from .utils.utils import get_date_chunks, is_chinese, always_true, always_false
+from .utils.utils import get_date_chunks, is_chinese, always_true, always_false, try_urlopen
 from .utils.file_utils import save_tar, untar, save_text, save_classified_text, extract_text, download_pdf
 
 
@@ -197,6 +196,7 @@ class Scraper(object):
 
         # Main
         t0 = time.time()
+        failed_attempts = 0
 
         file_cnt = 0
         sent_cnts = [0] * self.n_classes
@@ -217,34 +217,12 @@ class Scraper(object):
                 print(url)
 
                 # Fetch
-                try:
-                    response = urlopen(url)
-                except HTTPError as e:
-                    if e.code == 503:
-                        to = int(e.hdrs.get('retry-after', 30))
-                        print('Got {}. Retrying after {} seconds.'.format(e.code, self.t))
-                        time.sleep(self.t)
-                        continue
-                    else:
-                        print('HTTPError:', e)
-                        time.sleep(self.t)
-                        r += 1 # avoid redoing, may never succeed
-                        continue
-                except SocketError as e:
-                    if e.errno == 104:
-                        print('Got {}. Retrying after {} seconds.'.format(e.errno, self.t))
-                        time.sleep(self.t)
-                        continue
-                    else:
-                        print('SocketError:', e)
-                        time.sleep(self.t)
-                        r += 1 # avoid redoing, may never succeed
-                        continue
-                except Exception as e:
-                    print('Exception:', e)
-                    time.sleep(self.t)
+                suc, response = try_urlopen(url, self.t, failed_attempts)
+                if not suc:
+                    failed_attempts += 1
                     r += 1 # avoid redoing, may never succeed
                     continue
+                failed_attempts = 0
 
                 # Check content type
                 if response.getheader('Content-Type') == self.content_type:
@@ -301,6 +279,7 @@ class Scraper(object):
 
         # Main
         t0 = time.time()
+        failed_attempts = 0
 
         file_cnt = 0
         sent_cnt = 0
@@ -314,21 +293,11 @@ class Scraper(object):
                 print(req.get_full_url())
 
                 # Fetch
-                try:
-                    response = urlopen(req)
-                except SocketError as e:
-                    if e.errno == 104:
-                        print('Got {}. Retrying after {} seconds.'.format(e.errno, self.t))
-                        time.sleep(self.t)
-                        continue
-                    else:
-                        print('SocketError:', e)
-                        time.sleep(self.t)
-                        continue
-                except Exception as e:
-                    print('Exception: ', e)
-                    time.sleep(self.t)
+                suc, response = try_urlopen(req, self.t, failed_attempts)
+                if not suc:
+                    failed_attempts += 1
                     continue
+                failed_attempts = 0
 
                 page = BeautifulSoup(response, 'html.parser')
                 scraped_file_ids.append('{}:{}'.format(query, p))
@@ -340,7 +309,7 @@ class Scraper(object):
                     download_link = pdf_a.get('href')
                     print('download', download_link)
 
-                    pdf_file = download_pdf(download_link)                      # save to temp file
+                    pdf_file = download_pdf(download_link) # save to temp file
                     if pdf_file:
                         text_lists = extract_text(pdf_file, exts=['pdf'], filter_text=self.filter_text)
                         save_text(text_lists[0], save_to=save_to, append=True)
