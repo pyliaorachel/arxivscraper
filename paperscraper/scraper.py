@@ -217,12 +217,10 @@ class Scraper(object):
                 print(url)
 
                 # Fetch
-                suc, response = try_urlopen(url, self.t, failed_attempts)
+                suc, response, failed_attempts = try_urlopen(url, self.t, failed_attempts)
                 if not suc:
-                    failed_attempts += 1
                     r += 1 # avoid redoing, may never succeed
                     continue
-                failed_attempts = 0
 
                 # Check content type
                 if response.getheader('Content-Type') == self.content_type:
@@ -293,11 +291,9 @@ class Scraper(object):
                 print(req.get_full_url())
 
                 # Fetch
-                suc, response = try_urlopen(req, self.t, failed_attempts)
+                suc, response, failed_attempts = try_urlopen(req, self.t, failed_attempts)
                 if not suc:
-                    failed_attempts += 1
                     continue
-                failed_attempts = 0
 
                 page = BeautifulSoup(response, 'html.parser')
                 scraped_file_ids.append('{}:{}'.format(query, p))
